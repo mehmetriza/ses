@@ -1,0 +1,299 @@
+<script src="audiosynth.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+
+notes=[];
+var piano = Synth.createInstrument('organ');
+var t = {"do":"C","do#":"C#","re":"D","re#":"D#","mi":"E","fa":"F","fa#":"F#","sol":"G","sol#":"G#","la":"A","la#":"A#","si":"B","si#":"A#"};
+
+
+
+notapuan=[];
+
+var cikici_kaliblar=[["tekil_tırmanma","re6",12],["ikili_gidiş","re6",6],["üçlü_dönüş","re6",12],["beş_ileri","re6",2],["altı_ileri","re6",2]];
+var inici_kaliblar=[["tekil_inis","sol3",12],["ikili_dönüş","sol3",6],["üçlü_dönüş","sol3",12],["beş_geri","sol3",2],["altı_geri","sol3",2]];
+
+var rast={
+	"acilis":[
+		['fa',1],['sol',3],['re',4]
+	],
+	"ariza":[
+		['fa5','fa#5'],
+		['si4','la#4']
+	],
+	"geckiler":[
+		"hüzzam","segah","saba"
+	],
+	"karar":[
+		['sol',5,6]
+	],
+	"seyir":"inici"
+};
+
+
+var notalar = [];
+var notalarters = [];
+notaDuzen();
+console.dir(notalar);
+	muzik=[];
+	muzik.push(acilis(rast));
+
+function notaDuzen(){
+	j=1;
+	for(i=1;i<=4;i++)
+	{
+		$.each( t, function( idx, val ) {
+			if(idx.search("#")==-1)
+			{
+				if(rast["ariza"][0][0]==idx+(i+2))
+				{
+					idx=rast["ariza"][0][1].substr(0,rast["ariza"][0][1].length-1);
+				}
+				if(rast["ariza"][1][0]==idx+(i+2))
+				{
+					idx=rast["ariza"][1][1].substr(0,rast["ariza"][1][1].length-1);
+				}
+				notalar[j]=idx+(i+2);
+				notalarters[idx+(i+2)]=j;
+				j++;
+			}
+		});
+		
+	}
+}
+function acilis(makam)
+{
+	
+	var acilis=makam["acilis"];
+	
+	var firstRand=rand(0,acilis.length-1);
+	
+	acilis[firstRand].concat(rand(2,6));
+	notes.push(acilis[firstRand]);
+	makam["acilis"]=acilis[firstRand];
+	
+	for(l=0;l<=2;l++)
+	{
+		taksim(makam,notes[notes.length-1]);
+	}
+	
+}
+
+function taksim(makam,nota)
+{
+
+	
+	for(k=0;k<=rand(0,cikici_kaliblar.length-1);k++)
+	{
+		kaliblar(cikici_kaliblar[rand(0,cikici_kaliblar.length-1)],makam,nota);
+		//kaliblar(inici_kaliblar[rand(0,inici_kaliblar.length-1)],makam,nota);
+		
+	}
+	for(m=0;m<=rand(0,inici_kaliblar.length-1);m++)
+	{
+		kaliblar(inici_kaliblar[rand(0,inici_kaliblar.length-1)],makam,nota);
+	}
+	notes.forEach(function(val,idx){
+		
+		setTimeout(function(){ 
+			$("body").append("<h1>"+val[0]+val[1]+"</h1>");  
+			
+			$("h1").eq($("h1").length-2).animate({"right":"1920px"},1000);  
+			
+			piano.play(t[val[0]],val[1],val[2]|1);
+			//piano.play(t[val[0]],val[1],val[2]|1+3); 
+		},1500*idx);
+	});
+}
+
+/*var cikici_kaliblar=[["tekil_tırmanma","re6",12],["ikili_gidiş","re6",6],["üçlü_dönüş","re6",12],["beş_ileri","re6",2],["altı_ileri","re6",2]];
+var inici_kaliblar=[["tekil_inis","sol3",12],["ikili_dönüş","sol3",6],["üçlü_iniş","sol3",12],["beş_geri","sol3",2],["altı_geri","sol3",2]];*/
+function kaliblar(kalip,makam,nota){
+	var tersnota=notalarters[nota[0]+nota[1]];
+	console.log(kalip[0]);
+	switch(kalip[0]) {
+		case 'tekil_tırmanma':
+			
+			for(i=tersnota;i<=rand(tersnota+1,tersnota+kalip[2]);i++)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'ikili_gidiş':
+			for(i=tersnota;i<=rand(tersnota+1,tersnota+kalip[2]);i+=2)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'üçlü_dönüş':
+			for(i=tersnota;i<=rand(tersnota+1,tersnota+kalip[2]);i++)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i+3],"rand"));
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'beş_ileri':
+			for(i=tersnota;i<=rand(tersnota+1,tersnota+kalip[2]);i++)
+			{
+				if(notalar[i+5]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],1));
+					notes.push(notaParcala(notalar[i+5],1));
+					notes.push(notaParcala(notalar[i],2));
+				}
+			}
+		break;
+		
+		case 'altı_ileri':
+			for(i=tersnota;i<=rand(tersnota+1,tersnota+kalip[2]);i++)
+			{
+				if(notalar[i+6]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],1));
+					notes.push(notaParcala(notalar[i+6],1));
+					notes.push(notaParcala(notalar[i],2));
+				}
+			}
+		break;
+		
+		/*inici kalıplar*/
+		
+		case 'tekil_inis':
+		
+			for(i=tersnota;i>=rand(5,tersnota);i--)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'ikili_dönüş':
+			for(i=tersnota;i>=rand(5,tersnota);i-=2)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'üçlü_iniş':
+			for(i=tersnota;i>=rand(5,tersnota);i--)
+			{
+				if(notalar[i]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i+3],"rand"));
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'beş_geri':
+			for(i=tersnota;i>=rand(5,tersnota);i--)
+			{
+				if(notalar[i+5]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i+5],"rand"));
+					notes.push(notaParcala(notalar[i],"rand"));
+				}
+			}
+		break;
+		
+		case 'altı_geri':
+			for(i=tersnota;i>=rand(5,tersnota);i--)
+			{
+				if(notalar[i+6]!=kalip[1])
+				{
+					notes.push(notaParcala(notalar[i],1));
+					notes.push(notaParcala(notalar[i+6],"rand"));
+					notes.push(notaParcala(notalar[i],2));
+				}
+			}
+		break;
+		default:
+		
+	}
+	
+}
+function notaParcala(nota,kaclik){
+	if(kaclik=="rand")
+	{
+		kaclik=rand(1,3);
+	}
+	return [nota.substr(0,nota.length-1),nota.substr(-1),kaclik];
+}
+function rand(min,max){
+	return Math.floor((Math.random() * max+1) + min|0);
+}
+
+/*rast.forEach(function(val,idx){
+		
+		setTimeout(function(){ document.write(val[0]);  piano.play(t[val[0]],val[1],val[2]|1+2); },500*idx);
+	});
+/*
+for(i=0;i<a.length;i++)
+{
+	var val=a[i];
+	console.log(val[1]);
+	//setTimeout(function(){ console.log(val); piano.play(val[0],val[1],val[2]); },1000*i);
+}
+*/
+</script>
+<style>
+body{
+	background-color:#ecf0f1;
+}
+h1{     
+	width: 350px;
+    height: 350px;
+    background-color: #8e44ad;
+    color: #ecf0f1;
+    margin: auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    text-align: center;
+    line-height: 345px;
+    font-family: arial;
+    font-size: 100px;
+    border-radius: 300px; 
+}
+h1:last-child{
+-webkit-animation-name: spaceboots;
+	-webkit-animation-duration: 0.8s;
+	-webkit-transform-origin:50% 50%;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-timing-function: linear;
+}
+@-webkit-keyframes spaceboots {
+	0% { -webkit-transform: translate(2px, 1px) rotate(0deg); }
+	10% { -webkit-transform: translate(-1px, -2px) rotate(-1deg); }
+	20% { -webkit-transform: translate(-3px, 0px) rotate(1deg); }
+	30% { -webkit-transform: translate(0px, 2px) rotate(0deg); }
+	40% { -webkit-transform: translate(1px, -1px) rotate(1deg); }
+	50% { -webkit-transform: translate(-1px, 2px) rotate(-1deg); }
+	60% { -webkit-transform: translate(-3px, 1px) rotate(0deg); }
+	70% { -webkit-transform: translate(2px, 1px) rotate(-1deg); }
+	80% { -webkit-transform: translate(-1px, -1px) rotate(1deg); }
+	90% { -webkit-transform: translate(2px, 2px) rotate(0deg); }
+	100% { -webkit-transform: translate(1px, -2px) rotate(-1deg); }
+}
+.shake:hover,
+
+</style>
